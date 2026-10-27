@@ -1,0 +1,21 @@
+{
+  "name": "assistente-ia",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caiog-cruz/Assistente-IA.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/caiog-cruz/Assistente-IA/issues"
+  },
+  "homepage": "https://github.com/caiog-cruz/Assistente-IA#readme"
+}
