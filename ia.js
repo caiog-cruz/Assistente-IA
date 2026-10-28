@@ -1,10 +1,14 @@
 import 'dotenv/config';
+// pra funfar vai precisar instalar o dotenv
+// joga esse comando no terminal: npm install dotenv
+// pega a api key aqui https://openrouter.ai/
+// cria um arquivo .env e coloca dentro: OPENROUTER_API_KEY=sua-chave
+// se do nada parar de funcionar é porque deu o limite da chave, só criar uma nova e colar no .env de novo
 
 const apiKey = process.env.OPENROUTER_API_KEY;
 
 export async function responderIA(historico) {
-    const chave = chaveDeFora()
-    if (!chave) {
+    if (!apiKey) {
         throw new Error('Chave do OpenRouter não configurada.');
     }
 
@@ -30,7 +34,7 @@ export async function responderIA(historico) {
         {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${chave}`,
+                Authorization: `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({

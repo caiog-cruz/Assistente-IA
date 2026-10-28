@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { responderIA } from './chave.js';
+import { responderIA } from './ia.js';
 
 const server = createServer(async (req, res) => {
 
