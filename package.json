@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/caiog-cruz/Assistente-IA/issues"
   },
-  "homepage": "https://github.com/caiog-cruz/Assistente-IA#readme"
+  "homepage": "https://github.com/caiog-cruz/Assistente-IA#readme",
+  "dependencies": {
+    "dotenv": "^18.0.9"
+  }
 }

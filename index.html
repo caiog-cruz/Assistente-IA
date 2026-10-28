@@ -22,44 +22,52 @@
 
         document.getElementById('formzinho').addEventListener('submit', async (e) => {
             e.preventDefault();
-            let mensagem = document.getElementById('mensagem').value;
+
+            const campo = document.getElementById('mensagem');
+            const respostaIa = document.getElementById('respostaIa');
+            const mensagem = campo.value.trim();
+
+            if (!mensagem) return;
 
             historico.push({
                 role: 'user',
                 content: mensagem
-            })
-            const resposta = await fetch('http://localhost:11434/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'gemma3',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'Você é um assistente virtual de uma academia, portanto só responda perguntas relacionadas a isso. Responda de forma breve e direta, em no máximo 3 frases.'
+            });
+
+            respostaIa.value = 'Pensando...';
+
+            try {
+                const resposta = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    ...historico
-                ],
-                options: {
-                    num_predict: 20
-                },
-                stream: false
-            })
+                    body: JSON.stringify({
+                        messages: historico
+                    })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(dados.error || 'Erro ao consultar a IA.');
+                }
+
+                respostaIa.value = dados.content;
+
+                historico.push({
+                    role: 'assistant',
+                    content: dados.content
+                });
+
+                campo.value = '';
+
+            } catch (erro) {
+                console.error(erro);
+                respostaIa.value = 'Erro ao obter resposta. Verifique o terminal do servidor.';
+                historico.pop();
+            }
         });
-
-        const dados = await resposta.json();
-        
-        let respostaIa = document.getElementById('respostaIa').value = dados.message.content;
-        historico.push({
-            role: 'assistant',
-            content: respostaIa
-        });
-
-
-        })
-
     </script>
 </body>
 </html>
