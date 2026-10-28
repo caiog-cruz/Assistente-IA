@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        textarea{
+            width: 250px;
+            height: 100px;
+        }
+    </style>
+    <title>Document</title>
+</head>
+<body>
+    <form id="formzinho" method="POST">
+        <textarea name="" id="mensagem" required></textarea>
+        <input type="submit" value="enviar">
+        <textarea name="" disabled id="respostaIa"></textarea>
+    </form>
+    <script>
+        const historico = [];
+
+        document.getElementById('formzinho').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let mensagem = document.getElementById('mensagem').value;
+
+            historico.push({
+                role: 'user',
+                content: mensagem
+            })
+            const resposta = await fetch('http://localhost:11434/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gemma3',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Você é um assistente virtual de uma academia, portanto só responda perguntas relacionadas a isso. Responda de forma breve e direta, em no máximo 3 frases.'
+                    },
+                    ...historico
+                ],
+                options: {
+                    num_predict: 20
+                },
+                stream: false
+            })
+        });
+
+        const dados = await resposta.json();
+        
+        let respostaIa = document.getElementById('respostaIa').value = dados.message.content;
+        historico.push({
+            role: 'assistant',
+            content: respostaIa
+        });
+
+
+        })
+
+    </script>
+</body>
+</html>
