@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Assistente Ia</title>
+</head>
+<body>
+    <section>
+        <button id="puxa-chat">></button>
+        <div class="chat">
+            <h3>Assistente de academia</h3>
+            <div class="chat-mensagens">
+                <div class="user mensagem">
+                    <img src="/images/user.png" alt="">
+                    <span>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</span>
+                </div>
+                <!-- <div class="ai mensagem">
+                    <img src="/images/user.png" alt="">
+                    <span id="respostaIa"></span>
+                </div> -->
+            </div>
+            <form id="formzinho" method="POST">
+                <!-- <textarea name="" disabled ></textarea> -->
+                    <textarea name="" id="mensagem" required></textarea>
+    
+                    <input type="submit" value="enviar">    
+            </form>
+        </div>
+    </section>
+    
+    <script>
+        const historico = [];
+        const chatMensagens = document.querySelector('.chat-mensagens')
+
+        function mensagemNova(conteudo){
+            const mensagemDiv = document.createElement('div');
+            const mensagemIcone = document.createElement('img');
+            const mensagemSpan = document.createElement('span');
+            mensagemIcone.setAttribute('src', '/images/user.png');
+            mensagemSpan.innerText = conteudo;
+            mensagemDiv.appendChild(mensagemIcone);
+            mensagemDiv.appendChild(mensagemSpan);
+            mensagemDiv.classList.add('ai');
+            mensagemDiv.classList.add('mensagem');
+            chatMensagens.appendChild(mensagemDiv);
+            return mensagemDiv;
+        }
+
+        document.getElementById('formzinho').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const campo = document.getElementById('mensagem');
+            const respostaIa = document.getElementById('respostaIa');
+            const mensagem = campo.value.trim();
+            
+            if (!mensagem) return;
+            
+            historico.push({
+                role: 'user',
+                content: mensagem
+            });
+            
+            // respostaIa.innerText = 'Pensando...';
+
+            try {
+                const resposta = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: historico
+                    })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(dados.error || 'Erro ao consultar a IA.');
+                }
+
+                 mensagemNova(dados.content);
+
+                historico.push({
+                    role: 'assistant',
+                    content: dados.content
+                });
+
+                campo.value = '';
+
+            } catch (erro) {
+                console.error(erro);
+                respostaIa.value = 'Erro ao obter resposta. Verifique o terminal do servidor.';
+                historico.pop();
+            }
+        });
+    </script>
+</body>
+</html>

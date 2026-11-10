@@ -1,30 +1,22 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { responderIA } from './ia.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC = path.join(__dirname, 'public');
+
+const TIPOS = {
+  '.html': 'text/html; charset=utf-8',
+  '.css':  'text/css; charset=utf-8',
+  '.js':   'text/javascript; charset=utf-8',
+  '.png':  'image/png',
+};
+
 const server = createServer(async (req, res) => {
+    let url = req.url.split('?')[0];
 
-    // Abrir o site
-    if (req.method === 'GET' && req.url === '/') {
-        try {
-            const html = await readFile('./index.html', 'utf8');
-
-            res.writeHead(200, {
-                'Content-Type': 'text/html; charset=utf-8'
-            });
-
-            return res.end(html);
-
-        } catch (erro) {
-            res.writeHead(500, {
-                'Content-Type': 'text/plain; charset=utf-8'
-            });
-
-            return res.end('Erro ao carregar o HTML');
-        }
-    }
-
-    // Enviar mensagem para a IA
     if (req.method === 'POST' && req.url === '/api/chat') {
         try {
             let corpo = '';
@@ -68,12 +60,28 @@ const server = createServer(async (req, res) => {
         }
     }
 
-    // Rota não encontrada
-    res.writeHead(404, {
-        'Content-Type': 'text/plain; charset=utf-8'
-    });
+    if (req.method !== 'GET') {
+        res.writeHead(405);
+        return res.end('Método não permitido');
+    }
 
-    return res.end('Rota não encontrada');
+    const rota = url === '/' ? '/index.html' : url;
+    const arquivo = path.join(PUBLIC, path.normalize(rota));
+
+    if (!arquivo.startsWith(PUBLIC + path.sep)) {
+        res.writeHead(403);
+        return res.end('Acesso negado');
+    }
+
+    try {
+        const dados = await readFile(arquivo);
+        const tipo = TIPOS[path.extname(arquivo)] || 'application/octet-stream';
+        res.writeHead(200, { 'Content-Type': tipo });
+        return res.end(dados);
+    } catch {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('Não encontrado');
+    }
 });
 
 server.listen(3333, () => {
