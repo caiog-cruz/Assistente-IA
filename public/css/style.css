@@ -1,36 +1,80 @@
+:root{
+    --vermelho: #6d001a;
+    --vermelho-claro: #b15369;
+    --preto: #2b212b;
+}
+
 *{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    
 }
+
+body{
+    background-color: var(--vermelho);
+}
+
 section{
     display: flex;
     position: fixed;
-    left: 50%;
     align-items: center;
+    right: 0;
+    gap: 10px;
     height: 100vh;
+    transition: transform 0.5s;
+    transform: translateX(96%);
+}
+
+section.ativo{
+    margin-right: 0.5rem;
+    transform: translateX(0);
 }
 
 section #puxa-chat{
-    height: 30px;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.5s;
+    transform: rotate(3.142rad);
+}
+
+section.ativo #puxa-chat{
+    transform: rotate(0);
+}
+
+section #puxa-chat img{
+    width: 18px;
+    height: 18px;
 }
 
 .chat{
     border-radius: 10px;
-    background-color: rgb(248, 196, 196);
+    /* border: 1px solid white; */
+    background-color: white;
     width: 500px;
     display: flex;
+    align-items: center;
     flex-direction: column;
     height: 97vh;
 }
 
+.chat h3{
+    color: var(--vermelho-claro);
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
 .chat-mensagens{
     padding: 20px;
-    width: 100%;
-    min-height: 80%;
-    background-color: gray;
-    height: 400px;
+    width: 95%;
+    min-height: 75%;
+    background-color: var(--vermelho-claro);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    height: 520px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -38,9 +82,27 @@ section #puxa-chat{
     overflow: auto;
 }
 
+.chat-mensagens::-webkit-scrollbar{
+    background-color: transparent;
+    height: 5px;
+}
+
+.chat-mensagens::-webkit-scrollbar-thumb{
+    background-color: var(--vermelho);
+    width: 5px;
+    border-radius: 10px;
+    border: .25em solid var(--vermelho-claro);
+} 
+
+::-webkit-scrollbar-track{
+    margin-block: 10px;
+}
+
 .chat-mensagens .mensagem{
     display: flex;
     gap: 5px;
+    width: 100%;
+    max-width: 180px;
 }
 
 .chat-mensagens .mensagem img{
@@ -69,7 +131,6 @@ section #puxa-chat{
 }
 
 .chat h3{
-    border-bottom: 1px solid red;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -81,12 +142,15 @@ textarea{
 }
 
 form{
-    padding-top: 30px;
+    padding-top: 0px;
     padding-bottom: 10px;
     min-height: 10%;
-    width: 100%;
-    background-color: gray;
+    width: 95%;
+    background-color: var(--vermelho-claro);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
     display: flex;
+    align-items: center;
     justify-content: space-evenly;
 }
 

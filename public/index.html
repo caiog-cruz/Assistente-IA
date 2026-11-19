@@ -8,15 +8,15 @@
 </head>
 <body>
     <section>
-        <button id="puxa-chat">></button>
+        <button id="puxa-chat"><img src="/images/seta.svg" alt=""></button>
         <div class="chat">
             <h3>Assistente de academia</h3>
             <div class="chat-mensagens">
-                <div class="user mensagem">
+                <!-- <div class="user mensagem">
                     <img src="/images/user.png" alt="">
-                    <span>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</span>
+                    <span></span>
                 </div>
-                <!-- <div class="ai mensagem">
+                <div class="ai mensagem">
                     <img src="/images/user.png" alt="">
                     <span id="respostaIa"></span>
                 </div> -->
@@ -32,17 +32,23 @@
     
     <script>
         const historico = [];
-        const chatMensagens = document.querySelector('.chat-mensagens')
+        const chatMensagens = document.querySelector('.chat-mensagens');
 
-        function mensagemNova(conteudo){
+        function puxaChat(){
+            document.querySelector('section').classList.toggle('ativo');
+        }
+
+        const puxaChatBtn = document.getElementById('puxa-chat');
+        puxaChatBtn.addEventListener('click', puxaChat);
+
+        function mensagemNova(tipo){
             const mensagemDiv = document.createElement('div');
             const mensagemIcone = document.createElement('img');
             const mensagemSpan = document.createElement('span');
-            mensagemIcone.setAttribute('src', '/images/user.png');
-            mensagemSpan.innerText = conteudo;
+            mensagemIcone.setAttribute('src', '/images/user.svg');
             mensagemDiv.appendChild(mensagemIcone);
             mensagemDiv.appendChild(mensagemSpan);
-            mensagemDiv.classList.add('ai');
+            mensagemDiv.classList.add(tipo);
             mensagemDiv.classList.add('mensagem');
             chatMensagens.appendChild(mensagemDiv);
             return mensagemDiv;
@@ -61,7 +67,11 @@
                 content: mensagem
             });
             
-            // respostaIa.innerText = 'Pensando...';
+            let mensagemCriadaUser = mensagemNova('user');
+            mensagemCriadaUser.querySelector('span').innerText = mensagem;
+
+            let mensagemCriadaIa = mensagemNova('ai');
+            mensagemCriadaIa.querySelector('span').innerText = 'Pensando...';
 
             try {
                 const resposta = await fetch('/api/chat', {
@@ -77,10 +87,11 @@
                 const dados = await resposta.json();
 
                 if (!resposta.ok) {
+                    mensagemCriadaIa.querySelector('span').innerText = 'Erro';
                     throw new Error(dados.error || 'Erro ao consultar a IA.');
                 }
 
-                 mensagemNova(dados.content);
+                mensagemCriadaIa.querySelector('span').innerText = dados.content; 
 
                 historico.push({
                     role: 'assistant',
