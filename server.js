@@ -13,6 +13,7 @@ const TIPOS = {
   '.js':   'text/javascript; charset=utf-8',
   '.png':  'image/png',
   '.svg':  'image/svg+xml',
+  '.webp': 'image/webp',
 };
 
 const server = createServer(async (req, res) => {
@@ -38,14 +39,15 @@ const server = createServer(async (req, res) => {
                 }));
             }
 
-            const respostaIA = await responderIA(dados.messages);
+            const { texto, pose } = await responderIA(dados.messages);
 
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8'
             });
 
             return res.end(JSON.stringify({
-                content: respostaIA
+                content: texto, 
+                pose
             }));
 
         } catch (erro) {

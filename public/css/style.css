@@ -171,3 +171,33 @@ form input{
     height: 50px;
     border-radius: 50%;
 }
+
+/* Parte do Rocki */
+.rocki{
+    position: fixed;
+    bottom: 0;
+    right: 60px;
+    width: 60vh;
+    height: 90vh;
+    object-fit:contain;
+    object-position: bottom center;
+    pointer-events: none;
+    z-index: 0;
+    transition: right 0.5s;
+}
+
+/* Chat abre e ele se afasta do painel */
+body.chat-aberto .rocki{
+    right: 540px;
+}
+
+section{
+    z-index: 1;
+}
+
+/* Avatar do Rocki redondo */
+.chat-mensagens .mensagem.ai img{
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+}

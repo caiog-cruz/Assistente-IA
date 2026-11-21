@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/caiog-cruz/Assistente-IA#readme",
   "dependencies": {
-    "dotenv": "^18.0.9"
+    "dotenv": "^18.0.10"
   }
 }
