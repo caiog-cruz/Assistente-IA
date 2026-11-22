@@ -13,12 +13,32 @@ const TIPOS = {
   '.js':   'text/javascript; charset=utf-8',
   '.png':  'image/png',
   '.svg':  'image/svg+xml',
+  '.webp': 'image/webp',
 };
 
 const server = createServer(async (req, res) => {
-    let url = req.url.split('?')[0];
+    const url = req.url.split('?')[0];
+    const origin = req.headers.origin;
+    const isLocalOrigin = origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
-    if (req.method === 'POST' && req.url === '/api/chat') {
+    if (isLocalOrigin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Vary', 'Origin');
+    }
+
+    if (req.method === 'OPTIONS' && url === '/api/chat') {
+        if (!isLocalOrigin) {
+            res.writeHead(403);
+            return res.end();
+        }
+
+        res.writeHead(204);
+        return res.end();
+    }
+
+    if (req.method === 'POST' && url === '/api/chat') {
         try {
             let corpo = '';
 
@@ -38,14 +58,15 @@ const server = createServer(async (req, res) => {
                 }));
             }
 
-            const respostaIA = await responderIA(dados.messages);
+            const { texto, pose } = await responderIA(dados.messages);
 
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8'
             });
 
             return res.end(JSON.stringify({
-                content: respostaIA
+                content: texto, 
+                pose
             }));
 
         } catch (erro) {
