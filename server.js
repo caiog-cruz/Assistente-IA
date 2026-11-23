@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { responderIA } from './ia.js';
+import { gerarVoz } from './voz.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
@@ -39,7 +40,7 @@ const server = createServer(async (req, res) => {
                 }));
             }
 
-            const { texto, pose } = await responderIA(dados.messages);
+            const { texto, pose, segmentos } = await responderIA(dados.messages); 
 
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8'
@@ -47,7 +48,8 @@ const server = createServer(async (req, res) => {
 
             return res.end(JSON.stringify({
                 content: texto, 
-                pose
+                pose,
+                segmentos
             }));
 
         } catch (erro) {
@@ -60,6 +62,31 @@ const server = createServer(async (req, res) => {
             return res.end(JSON.stringify({
                 error: 'Erro ao processar a mensagem.'
             }));
+        }
+    }
+            if (req.method === 'POST' && req.url === '/api/voz') {
+        try {
+            let corpo = '';
+            for await (const parte of req) {
+                corpo += parte;
+            }
+
+            const { texto } = JSON.parse(corpo);
+
+            if (typeof texto !== 'string' || !texto.trim() || texto.length > 500) {
+                res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                return res.end(JSON.stringify({ error: 'Texto inválido.' }));
+            }
+
+            const audio = await gerarVoz(texto);
+
+            res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
+            return res.end(audio);
+
+        } catch (erro) {
+            console.error('Erro na rota /api/voz:', erro);
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ error: 'Erro ao gerar voz.' }));
         }
     }
 

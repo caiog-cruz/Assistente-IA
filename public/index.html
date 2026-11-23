@@ -13,6 +13,7 @@
         <button id="puxa-chat"><img src="/images/seta.svg" alt=""></button>
         <div class="chat">
                 <h3>Assistente de academia</h3>
+                <button id="btn-voz" type="button" title="Ligar/Desligar voz">Com Voz</button>
             <div class="chat-mensagens">
                 <!-- <div class="user mensagem">
                     <img src="/images/user.png" alt="">
@@ -63,6 +64,114 @@
             if (voltarIdle) timerIdle = setTimeout(() => mudarPose('idle', false), 8000);
         }
 
+        // Voz do Rocki
+        let vozAtiva = true;
+        let vozPtBR = null;
+
+        function carregarVoz() {
+            const vozes = window.speechSynthesis.getVoices();
+            const ptBR = vozes.filter(v => v.lang === 'pt-BR' || v.lang === 'pt_BR');
+
+            vozPtBR = 
+                ptBR.find(v => /antonio.*natural/i.test(v.name)) ||
+                ptBR.find(v => /natural|online/i.test(v.name)) ||
+                ptBR.find(v => /google/i.test(v.name)) ||
+                ptBR[0] ||
+                vozes.find(v => v.lang.startsWith('pt')) ||
+                null;
+            
+            console.log('Voz escolhida: ', vozPtBR?.name)
+        }
+
+        let audioAtual = null;
+
+        function pararVoz() {
+            window.speechSynthesis.cancel();
+                if (audioAtual) {
+                audioAtual.pause();
+                audioAtual = null;
+            }
+        }
+
+        // Isso aqui é pra descobrir qual frase está sendo falada
+        function indiceDoSegmento(segmentos, fracao){
+            const total = segmentos.reduce((some, s) => some + s.texto.length, 0);
+            let acumulado = 0;
+            for (let i = 0; i < segmentos.length; i++) {
+                acumulado += segmentos[i].texto.length;
+                if (fracao <= acumulado / total) return i;
+            }
+            return segmentos.length - 1;
+        }
+
+        // Isso aqui é pra mudar a pose só quando a frase muda
+        function criarAtualizadorDePose(segmentos) {
+            let atual = -1;
+            return (fracao) => {
+                const i = indiceDoSegmento(segmentos, fracao);
+                if (i !== atual) {
+                    atual = i;
+                    mudarPose(segmentos[i].pose, false);
+                }
+            };
+        }
+
+        function falarComNavegador(texto, segmentos) {
+            const atualizarPose = criarAtualizadorDePose(segmentos);
+            const fala = new SpeechSynthesisUtterance(texto);
+            fala.lang = 'pt-BR';
+            fala.rate = 1.1;
+            if (vozPtBR) fala.voice = vozPtBR;
+
+            fala.onstart = () => atualizarPose(0);
+            fala.onboundary = (e) => atualizarPose(e.charIndex / texto.length);
+            fala.onend = () => mudarPose('idle', false);
+            fala.onerror = () => mudarPose('idle', false);
+
+            window.speechSynthesis.speak(fala);
+        }
+
+        async function falar(texto, segmentos) {
+            pararVoz();
+            const atualizarPose = criarAtualizadorDePose(segmentos);
+
+            try {
+                const r = await fetch('/api/voz',{
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ texto })
+                });
+                if (!r.ok) throw new Error('Falha na voz do servidor');
+
+                const blob = await r.blob();
+                const audio = new Audio(URL.createObjectURL(blob));
+                audioAtual = audio;
+
+                audio.onplay = () => atualizarPose(0);
+                audio.ontimeupdate = () => {
+                    if (audio.duration) atualizarPose(audio.currentTime / audio.duration); 
+                };
+                audio.onended = () => { audioAtual = null; mudarPose('idle', false); };
+                audio.onerror = () => { audioAtual = null; mudarPose('idle', false); };
+
+                await audio.play();
+            }catch (e) {
+                console.error(e);
+                falarComNavegador(texto, segmentos);
+            }
+        }
+
+        // Botão de mutar a voz
+        const btnVoz = document.getElementById('btn-voz');
+        btnVoz.addEventListener('click', () => {
+            vozAtiva = !vozAtiva;
+            btnVoz.textContent = vozAtiva ? 'Com Voz' : 'Sem Voz';
+            if (!vozAtiva) {
+                pararVoz();
+                mudarPose('idle', false);
+            }
+        });
+
         function puxaChat(){
             document.querySelector('section').classList.toggle('ativo');
             document.body.classList.toggle('chat-aberto');
@@ -91,6 +200,8 @@
             const mensagem = campo.value.trim();
             
             if (!mensagem) return;
+
+            pararVoz();
             
             historico.push({
                 role: 'user',
@@ -124,7 +235,15 @@
                 }
 
                 mensagemCriadaIa.querySelector('span').innerText = dados.content; 
-                mudarPose(dados.pose);
+                const segmentos = dados.segmentos?.length
+                    ? dados.segmentos
+                    : [{ pose: dados.pose, texto: dados.content }];
+
+                if (vozAtiva) {
+                    falar(dados.content, segmentos);
+                } else {
+                    mudarPose(dados.pose);
+                }
 
                 historico.push({
                     role: 'assistant',

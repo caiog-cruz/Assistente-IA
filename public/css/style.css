@@ -201,3 +201,20 @@ section{
     object-fit: cover;
     object-position: top center;
 }
+
+/* Botão de voz */
+#btn-voz {
+    background: transparent;
+    border: 0;
+    font-size: 0.9rem;
+    color: var(--vermelho);
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    top: 8px;
+    right: 12px;
+}
+
+.chat {
+    position: relative;
+}
