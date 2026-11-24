@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { responderIA } from './ia.js';
+import { gerarVoz } from './voz.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(__dirname, 'public');
@@ -17,28 +18,9 @@ const TIPOS = {
 };
 
 const server = createServer(async (req, res) => {
-    const url = req.url.split('?')[0];
-    const origin = req.headers.origin;
-    const isLocalOrigin = origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    let url = req.url.split('?')[0];
 
-    if (isLocalOrigin) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-        res.setHeader('Vary', 'Origin');
-    }
-
-    if (req.method === 'OPTIONS' && url === '/api/chat') {
-        if (!isLocalOrigin) {
-            res.writeHead(403);
-            return res.end();
-        }
-
-        res.writeHead(204);
-        return res.end();
-    }
-
-    if (req.method === 'POST' && url === '/api/chat') {
+    if (req.method === 'POST' && req.url === '/api/chat') {
         try {
             let corpo = '';
 
@@ -58,7 +40,7 @@ const server = createServer(async (req, res) => {
                 }));
             }
 
-            const { texto, pose } = await responderIA(dados.messages);
+            const { texto, pose, segmentos } = await responderIA(dados.messages); 
 
             res.writeHead(200, {
                 'Content-Type': 'application/json; charset=utf-8'
@@ -66,7 +48,8 @@ const server = createServer(async (req, res) => {
 
             return res.end(JSON.stringify({
                 content: texto, 
-                pose
+                pose,
+                segmentos
             }));
 
         } catch (erro) {
@@ -79,6 +62,31 @@ const server = createServer(async (req, res) => {
             return res.end(JSON.stringify({
                 error: 'Erro ao processar a mensagem.'
             }));
+        }
+    }
+            if (req.method === 'POST' && req.url === '/api/voz') {
+        try {
+            let corpo = '';
+            for await (const parte of req) {
+                corpo += parte;
+            }
+
+            const { texto } = JSON.parse(corpo);
+
+            if (typeof texto !== 'string' || !texto.trim() || texto.length > 500) {
+                res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                return res.end(JSON.stringify({ error: 'Texto inválido.' }));
+            }
+
+            const audio = await gerarVoz(texto);
+
+            res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
+            return res.end(audio);
+
+        } catch (erro) {
+            console.error('Erro na rota /api/voz:', erro);
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+            return res.end(JSON.stringify({ error: 'Erro ao gerar voz.' }));
         }
     }
 

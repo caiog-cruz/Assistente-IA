@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
     <title>Assistente Ia</title>
 </head>
 <body>
-    <img id="rocki" class="rocki" src="images/RockiIdle.png" alt="Rocki">
+    <div class="embaca"></div>
+    <img id="rocki" class="rocki" src="/images/RockiIdle.png" alt="Rocki">
 
     <section>
-        <button id="puxa-chat"><img src="images/seta.svg" alt=""></button>
+        <button id="puxa-chat"><img src="/images/seta.svg" alt=""></button>
         <div class="chat">
                 <h3>Assistente de academia</h3>
+                <button id="btn-voz" type="button" title="Ligar/Desligar voz">Com Voz</button>
             <div class="chat-mensagens">
                 <!-- <div class="user mensagem">
-                    <img src="images/user.png" alt="">
+                    <img src="/images/user.png" alt="">
                     <span></span>
                 </div>
                 <div class="ai mensagem">
-                    <img src="images/user.png" alt="">
+                    <img src="/images/user.png" alt="">
                     <span id="respostaIa"></span>
                 </div> -->
             </div>
             <form id="formzinho" method="POST">
                 <!-- <textarea name="" disabled ></textarea> -->
-                    <textarea name="" id="mensagem" required></textarea>
+                    <input name="" id="mensagem" required></textarea>
     
-                    <input type="submit" value="enviar">    
+                    <button type="submit">Enviar</button>   
             </form>
         </div>
     </section>
@@ -35,7 +37,6 @@
     <script>
         const historico = [];
         const chatMensagens = document.querySelector('.chat-mensagens');
-        const apiChat = 'http://localhost:3333/api/chat';
 
         const POSES = {
             idle: 'RockiIdle.png',
@@ -51,7 +52,7 @@
         };
 
         // Pré carregamento para não piscar na troca
-        Object.values(POSES).forEach(f => { new Image().src = 'images/' + f;});
+        Object.values(POSES).forEach(f => { new Image().src = '/images/' + f;});
 
         const rocki = document.getElementById('rocki');
         let poseAtual = 'idle';
@@ -60,11 +61,120 @@
         function mudarPose(nome, voltarIdle = true) {
             clearTimeout(timerIdle);
             poseAtual = nome;
-            rocki.src = 'images/' + (POSES[nome] || POSES.falando);
+            rocki.src = '/images/' + (POSES[nome] || POSES.falando);
             if (voltarIdle) timerIdle = setTimeout(() => mudarPose('idle', false), 8000);
         }
 
+        // Voz do Rocki
+        let vozAtiva = true;
+        let vozPtBR = null;
+
+        function carregarVoz() {
+            const vozes = window.speechSynthesis.getVoices();
+            const ptBR = vozes.filter(v => v.lang === 'pt-BR' || v.lang === 'pt_BR');
+
+            vozPtBR = 
+                ptBR.find(v => /antonio.*natural/i.test(v.name)) ||
+                ptBR.find(v => /natural|online/i.test(v.name)) ||
+                ptBR.find(v => /google/i.test(v.name)) ||
+                ptBR[0] ||
+                vozes.find(v => v.lang.startsWith('pt')) ||
+                null;
+            
+            console.log('Voz escolhida: ', vozPtBR?.name)
+        }
+
+        let audioAtual = null;
+
+        function pararVoz() {
+            window.speechSynthesis.cancel();
+                if (audioAtual) {
+                audioAtual.pause();
+                audioAtual = null;
+            }
+        }
+
+        // Isso aqui é pra descobrir qual frase está sendo falada
+        function indiceDoSegmento(segmentos, fracao){
+            const total = segmentos.reduce((some, s) => some + s.texto.length, 0);
+            let acumulado = 0;
+            for (let i = 0; i < segmentos.length; i++) {
+                acumulado += segmentos[i].texto.length;
+                if (fracao <= acumulado / total) return i;
+            }
+            return segmentos.length - 1;
+        }
+
+        // Isso aqui é pra mudar a pose só quando a frase muda
+        function criarAtualizadorDePose(segmentos) {
+            let atual = -1;
+            return (fracao) => {
+                const i = indiceDoSegmento(segmentos, fracao);
+                if (i !== atual) {
+                    atual = i;
+                    mudarPose(segmentos[i].pose, false);
+                }
+            };
+        }
+
+        function falarComNavegador(texto, segmentos) {
+            const atualizarPose = criarAtualizadorDePose(segmentos);
+            const fala = new SpeechSynthesisUtterance(texto);
+            fala.lang = 'pt-BR';
+            fala.rate = 1.1;
+            if (vozPtBR) fala.voice = vozPtBR;
+
+            fala.onstart = () => atualizarPose(0);
+            fala.onboundary = (e) => atualizarPose(e.charIndex / texto.length);
+            fala.onend = () => mudarPose('idle', false);
+            fala.onerror = () => mudarPose('idle', false);
+
+            window.speechSynthesis.speak(fala);
+        }
+
+        async function falar(texto, segmentos) {
+            pararVoz();
+            const atualizarPose = criarAtualizadorDePose(segmentos);
+
+            try {
+                const r = await fetch('/api/voz',{
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ texto })
+                });
+                if (!r.ok) throw new Error('Falha na voz do servidor');
+
+                const blob = await r.blob();
+                const audio = new Audio(URL.createObjectURL(blob));
+                audioAtual = audio;
+
+                audio.onplay = () => atualizarPose(0);
+                audio.ontimeupdate = () => {
+                    if (audio.duration) atualizarPose(audio.currentTime / audio.duration); 
+                };
+                audio.onended = () => { audioAtual = null; mudarPose('idle', false); };
+                audio.onerror = () => { audioAtual = null; mudarPose('idle', false); };
+
+                await audio.play();
+            }catch (e) {
+                console.error(e);
+                falarComNavegador(texto, segmentos);
+            }
+        }
+
+        // Botão de mutar a voz
+        const btnVoz = document.getElementById('btn-voz');
+        btnVoz.addEventListener('click', () => {
+            vozAtiva = !vozAtiva;
+            btnVoz.textContent = vozAtiva ? 'Com Voz' : 'Sem Voz';
+            if (!vozAtiva) {
+                pararVoz();
+                mudarPose('idle', false);
+            }
+        });
+
         function puxaChat(){
+            document.querySelector('.embaca').classList.toggle('ativo');
             document.querySelector('section').classList.toggle('ativo');
             document.body.classList.toggle('chat-aberto');
         }
@@ -76,7 +186,7 @@
             const mensagemDiv = document.createElement('div');
             const mensagemIcone = document.createElement('img');
             const mensagemSpan = document.createElement('span');
-            mensagemIcone.setAttribute('src', tipo === 'ai' ? 'images/RockiPerfil.webp' : 'images/user.svg');
+            mensagemIcone.setAttribute('src', tipo === 'ai' ? '/images/RockiPerfil.webp' : '/images/user.svg');
             mensagemDiv.appendChild(mensagemIcone);
             mensagemDiv.appendChild(mensagemSpan);
             mensagemDiv.classList.add(tipo);
@@ -92,6 +202,8 @@
             const mensagem = campo.value.trim();
             
             if (!mensagem) return;
+
+            pararVoz();
             
             historico.push({
                 role: 'user',
@@ -107,7 +219,7 @@
             mudarPose('pensando', false);
 
             try {
-                const resposta = await fetch(apiChat, {
+                const resposta = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -125,7 +237,15 @@
                 }
 
                 mensagemCriadaIa.querySelector('span').innerText = dados.content; 
-                mudarPose(dados.pose);
+                const segmentos = dados.segmentos?.length
+                    ? dados.segmentos
+                    : [{ pose: dados.pose, texto: dados.content }];
+
+                if (vozAtiva) {
+                    falar(dados.content, segmentos);
+                } else {
+                    mudarPose(dados.pose);
+                }
 
                 historico.push({
                     role: 'assistant',
@@ -137,7 +257,7 @@
 
             } catch (erro) {
                 console.error(erro);
-                mensagemCriadaIa.querySelector('span').innerText = 'Erro ao conectar. Inicie o servidor Node na porta 3333 e verifique o terminal.';
+                mensagemCriadaIa.querySelector('span').innerText = 'Erro ao obter resposta. Verifique o terminal do servidor.';
                 mudarPose('preocupado');
                 historico.pop();
             }
