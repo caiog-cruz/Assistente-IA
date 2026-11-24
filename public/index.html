@@ -14,7 +14,7 @@
         <button id="puxa-chat"><img src="/images/seta.svg" alt=""></button>
         <div class="chat">
                 <h3>Assistente de academia</h3>
-                <button id="btn-voz" type="button" title="Ligar/Desligar voz">Com Voz</button>
+                <button id="btn-voz" type="button" title="Ligar/Desligar voz">🔊</button>
             <div class="chat-mensagens">
                 <!-- <div class="user mensagem">
                     <img src="/images/user.png" alt="">
@@ -166,7 +166,7 @@
         const btnVoz = document.getElementById('btn-voz');
         btnVoz.addEventListener('click', () => {
             vozAtiva = !vozAtiva;
-            btnVoz.textContent = vozAtiva ? 'Com Voz' : 'Sem Voz';
+            btnVoz.textContent = vozAtiva ? '🔊' : '🔇';
             if (!vozAtiva) {
                 pararVoz();
                 mudarPose('idle', false);

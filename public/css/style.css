@@ -282,15 +282,30 @@ section{
 }
 
 #btn-voz {
-    background: transparent;
-    border: 0;
-    font-size: 0.9rem;
-    color: var(--vermelho);
-    font-weight: bold;
-    cursor: pointer;
     position: absolute;
+    top: 13vh;
+    left: 50%;
+    transform: translateX(110px);
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+    margin: 0;
+    z-index: 5;
 }
 
 .chat {
     position: relative;
+}
+
+@media (max-width: 1920px){
+    .chat{
+        width: 600px;
+    }
+
+    body.chat-aberto .rocki{
+        right: 620px;
+    }
 }
