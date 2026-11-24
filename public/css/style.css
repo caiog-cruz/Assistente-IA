@@ -208,25 +208,33 @@ form button{
     width: 44px;
     height: 44px;
     border-radius: 50%;
+    padding: 2px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: 0.2s;
+}
+
+form button:hover{
+    background-color: var(--rosa-escuro);
 }
 
 /* Parte do Rocki */
 .rocki{
     position: fixed;
     bottom: 0;
-    right: 60px;
+    right: -30%;
     width: 60vh;
     height: 90vh;
     object-fit:contain;
     object-position: bottom center;
     pointer-events: none;
-    z-index: 0;
+    z-index: 2;
     transition: right 0.5s;
 }
 
 /* Chat abre e ele se afasta do painel */
 body.chat-aberto .rocki{
-    right: 540px;
+    right: 320px;
 }
 
 section{
@@ -240,7 +248,39 @@ section{
     object-position: top center;
 }
 
-/* Botão de voz */
+@media (max-width: 600px){
+    section{
+        width: 100vw;
+        gap: 8px;
+        transform: translateX(calc(100% - 38px));
+    }
+
+    section.ativo{
+        margin-right: 0;
+        transform: translateX(0);
+    }
+
+    section #puxa-chat{
+        flex: 0 0 30px;
+    }
+
+    .chat{
+        width: calc(100% - 38px);
+        min-width: 0;
+        height: 95vh;
+    }
+
+    .chat-mensagens{
+        flex: 1;
+        height: auto;
+        min-height: 0;
+    }
+
+    .chat-mensagens .mensagem{
+        max-width: 180px;
+    }
+}
+
 #btn-voz {
     background: transparent;
     border: 0;
@@ -249,8 +289,6 @@ section{
     font-weight: bold;
     cursor: pointer;
     position: absolute;
-    top: 8px;
-    right: 12px;
 }
 
 .chat {
