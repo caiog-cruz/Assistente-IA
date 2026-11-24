@@ -1,6 +1,8 @@
 :root{
     --vermelho: #6d001a;
     --vermelho-claro: #b15369;
+    --rosa: #eb6e99;
+    --rosa-escuro: #ef497a;
     --preto: #2b212b;
 }
 
@@ -8,10 +10,28 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    z-index: 3;
+}
+
+.embaca{
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.541);
+    z-index: 1;
+    position: fixed;
+    display: none;
+}
+
+.embaca.ativo{
+    display: block;
 }
 
 body{
-    background-color: var(--vermelho);
+    background-image: url('../images/Fundo.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
 }
 
 section{
@@ -51,30 +71,38 @@ section #puxa-chat img{
 }
 
 .chat{
+    background-image: url('../images/celular2.png');
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: auto 91%;
     border-radius: 10px;
     /* border: 1px solid white; */
-    background-color: white;
-    width: 500px;
+    width: 300px;
+    margin-right: 20px;
     display: flex;
     align-items: center;
     flex-direction: column;
     height: 97vh;
+    padding: 13vh 0;
 }
 
 .chat h3{
-    color: var(--vermelho-claro);
+    color: var(--preto);
     padding-top: 10px;
     padding-bottom: 10px;
+    background-color: rgba(177, 83, 105, 0.18);
+    border-radius: 10px;
 }
 
 .chat-mensagens{
-    padding: 20px;
-    width: 95%;
-    min-height: 75%;
-    background-color: var(--vermelho-claro);
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    height: 520px;
+    padding: 12px;
+    width: min(90%, 35vh);
+    min-height: 0;
+    background-color: rgba(177, 83, 105, 0.18);
+    border-radius: 12px;
+    height: auto;
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -122,16 +150,16 @@ section #puxa-chat img{
 }
 
 .chat-mensagens .mensagem.user{
-    margin-right: 15rem;
+    align-self: flex-start;
 }
 
 .chat-mensagens .mensagem.ai{
     flex-direction: row-reverse;
-    margin-left: 15rem;
+    align-self: flex-end;
 }
 
 .chat h3{
-    width: 100%;
+    width: min(90%, 35vh);
     display: flex;
     justify-content: center;
 }
@@ -142,33 +170,43 @@ textarea{
 }
 
 form{
-    padding-top: 0px;
-    padding-bottom: 10px;
+    padding: 6px 8px;
     min-height: 10%;
-    width: 95%;
-    background-color: var(--vermelho-claro);
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
+    width: min(90%, 35vh);
+    background-color: rgba(177, 83, 105, 0.18);
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: space-between;
+    gap: 8px;
 }
 
-form textarea{
+form input{
+    flex: 1;
     display: flex;
     align-items: center;
     resize: none;
     overflow: hidden;
-    width: 80%;
+    width: auto;
+    min-width: 0;
     max-height: 40px;
     padding: 10px;
     font-size: 1rem;
     border-radius: 50px;
+    border: 0;
 }
 
-form input{
-    width: 50px;
-    height: 50px;
+form input:focus{
+    outline: 1px solid var(--rosa);
+}
+
+form button{
+    border: 2px solid var(--rosa-escuro);
+    background-color: var(--rosa);
+    color: white;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
 }
 

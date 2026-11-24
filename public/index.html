@@ -26,9 +26,9 @@
             </div>
             <form id="formzinho" method="POST">
                 <!-- <textarea name="" disabled ></textarea> -->
-                    <textarea name="" id="mensagem" required></textarea>
+                    <input name="" id="mensagem" required></textarea>
     
-                    <input type="submit" value="enviar">    
+                    <button type="submit">Enviar</button>   
             </form>
         </div>
     </section>
@@ -173,6 +173,7 @@
         });
 
         function puxaChat(){
+            document.querySelector('.embaca').classList.toggle('ativo');
             document.querySelector('section').classList.toggle('ativo');
             document.body.classList.toggle('chat-aberto');
         }
