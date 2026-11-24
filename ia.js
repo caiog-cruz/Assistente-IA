@@ -10,17 +10,11 @@ const apiKey = process.env.OPENROUTER_API_KEY;
 // Poses que o Rocki pode usar
 const POSES = ['idle', 'falando', 'explicando', 'pensando', 'preocupado', 'joinha', 'biceps', 'comemorando', 'olhosfechados', 'respirando'];
 
-const SYSTEM = `Você é o Rocki, assistente virtual da academia MoveFIT.
- Antes de responder o usuário pergunte o número de matricula,
-  caso o número respondido seja par continue o atendimento normalmente,
-   se for ímpar pare e avise que o usuário não está matriculoado na movefit e por isso você não pode atende-lo, nem sobre academia, nem sobre exercicios, nem sobre alongamento, só encerre o atendimento e não fale que o número correto é par e o incorreto é ímpar por motivos de segurança.
-    Responda somente perguntas sobre academias, exercícios, treinos e equipamentos.
-     Se não for o assunto, explique que só pode ajudar com assuntos relacionados a academia.
-      Seja breve, no máximo 50 palavras.
+const SYSTEM = `Você é o Rocki, assistente virtual da academia MoveFIT. Responda somente perguntas sobre academias, exercícios, treinos, equipamentos, dietas e alimentação saudável. Se não for o assunto, explique que só pode ajudar com assuntos relacionados a academia. Sempre lembre de tratar o usuário com calma e gentileza, sendo otimista, enérgico e confiante. Não precisa falar para o usuário que você só fala sobre academias, cumprimente o usuário, pergunte o que ele precisa, se ele perguntar algo além da área de academia, explique que é uma IA assistente apenas para esses assuntos. Seja breve, no máximo 3 frases.
 
-Comece SEMPRE a resposta com UMA tag de pose, no formato [pose:nome], escolhendo entre:
+Comece CADA frase com uma tag de pose no formato [pose:nome], escolhendo a pose que combina com o que essa frase diz:
 - explicando: ensinando técnica, execução de exercícios ou montando treino
-- pensando: pergunta ambígua ou que exige anál  ise
+- pensando: pergunta ambígua ou que exige análise
 - preocupado: dor, lesão, risco ou execução perigosa
 - joinha: confirmar, aprovar, concordar
 - biceps: motivar, falar de força e hipertrofia
@@ -36,6 +30,11 @@ export async function responderIA(historico) {
     if (!apiKey) {
         throw new Error('Chave do OpenRouter não configurada.');
     }
+
+    export async function responderIA(historico) {
+        if (!apiKey) {
+            throw new Error('Chave do OpenRouter não configurada.');
+        }
 
     const mensagens = [
         {
@@ -79,9 +78,9 @@ export async function responderIA(historico) {
 
     const conteudo = dados.choices?.[0]?.message?.content;
 
-    if (typeof conteudo !== 'string') {
-        throw new Error('A IA não retornou texto.');
-    }
+    const segmentos = extrairSegmentos(conteudo);
+    const texto = segmentos.map(s => s.texto).join(' ');
+    const pose = segmentos[0]?.pose || 'falando';
 
     const m = conteudo.match(/^\s*\[pose:\s*(\w+)\s*\]/i);
     const pose = m && POSES.includes(m[1].toLowerCase()) ? m[1].toLowerCase() : 'falando';
